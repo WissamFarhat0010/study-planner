@@ -2,10 +2,35 @@ import Task from "../models/Task.js";
 
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const filter = {};
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    if (req.query.priority) {
+      filter.priority = req.query.priority;
+    }
+
+    const tasks = await Task.find(filter).sort({ createdAt: -1 });
+
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch tasks" });
+  }
+};
+
+export const getTaskById = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch task" });
   }
 };
 
@@ -27,6 +52,7 @@ export const createTask = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 export const updateTask = async (req, res) => {
   try {
     const { title, description, dueDate, status, priority, estimatedHours } = req.body;
@@ -53,6 +79,7 @@ export const updateTask = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 export const deleteTask = async (req, res) => {
   try {
     const deletedTask = await Task.findByIdAndDelete(req.params.id);
@@ -66,19 +93,7 @@ export const deleteTask = async (req, res) => {
     res.status(500).json({ message: "Failed to delete task" });
   }
 };
-export const getTaskById = async (req, res) => {
-  try {
-    const task = await Task.findById(req.params.id);
 
-    if (!task) {
-      return res.status(404).json({ message: "Task not found" });
-    }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch task" });
-  }
-};
 export const getTaskStats = async (req, res) => {
   try {
     const totalTasks = await Task.countDocuments();
