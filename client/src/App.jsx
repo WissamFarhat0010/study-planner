@@ -52,6 +52,18 @@ function App() {
     fetchTasks();
   };
 
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this task?");
+
+    if (!confirmDelete) return;
+
+    await fetch(`http://localhost:5000/api/tasks/${id}`, {
+      method: "DELETE",
+    });
+
+    fetchTasks();
+  };
+
   return (
     <div style={{ padding: "30px", fontFamily: "Arial" }}>
       <h1>📚 Study Planner</h1>
@@ -125,6 +137,8 @@ function App() {
               <p>Status: {task.status}</p>
               <p>Priority: {task.priority}</p>
               <p>Estimated hours: {task.estimatedHours}</p>
+
+              <button onClick={() => handleDelete(task._id)}>Delete</button>
             </div>
           ))}
         </div>
