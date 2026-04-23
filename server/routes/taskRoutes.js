@@ -5,9 +5,12 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  getTaskStats,
 } from "../controllers/taskController.js";
 
 const router = express.Router();
+
+router.get("/stats/summary", getTaskStats);
 
 router.get("/", getTasks);
 router.get("/:id", getTaskById);
