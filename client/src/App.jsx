@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 function App() {
   const [tasks, setTasks] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -32,13 +33,20 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await fetch("http://localhost:5000/api/tasks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
+    if (editingId) {
+      await fetch(`http://localhost:5000/api/tasks/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      setEditingId(null);
+    } else {
+      await fetch("http://localhost:5000/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+    }
 
     setFormData({
       title: "",
@@ -53,15 +61,15 @@ function App() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this task?");
-
-    if (!confirmDelete) return;
-
     await fetch(`http://localhost:5000/api/tasks/${id}`, {
       method: "DELETE",
     });
-
     fetchTasks();
+  };
+
+  const handleEdit = (task) => {
+    setFormData(task);
+    setEditingId(task._id);
   };
 
   return (
@@ -69,29 +77,9 @@ function App() {
       <h1>📚 Study Planner</h1>
 
       <form onSubmit={handleSubmit} style={{ marginBottom: "30px" }}>
-        <input
-          name="title"
-          placeholder="Task title"
-          value={formData.title}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          name="description"
-          placeholder="Description"
-          value={formData.description}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          name="dueDate"
-          type="date"
-          value={formData.dueDate}
-          onChange={handleChange}
-          required
-        />
+        <input name="title" value={formData.title} onChange={handleChange} required />
+        <input name="description" value={formData.description} onChange={handleChange} required />
+        <input name="dueDate" type="date" value={formData.dueDate?.substring(0,10)} onChange={handleChange} required />
 
         <select name="status" value={formData.status} onChange={handleChange}>
           <option>Pending</option>
@@ -115,34 +103,22 @@ function App() {
           required
         />
 
-        <button type="submit">Add Task</button>
+        <button type="submit">
+          {editingId ? "Update Task" : "Add Task"}
+        </button>
       </form>
 
-      {tasks.length === 0 ? (
-        <p>No tasks found</p>
-      ) : (
-        <div>
-          {tasks.map((task) => (
-            <div
-              key={task._id}
-              style={{
-                border: "1px solid #ccc",
-                padding: "15px",
-                marginBottom: "10px",
-                borderRadius: "8px",
-              }}
-            >
-              <h3>{task.title}</h3>
-              <p>{task.description}</p>
-              <p>Status: {task.status}</p>
-              <p>Priority: {task.priority}</p>
-              <p>Estimated hours: {task.estimatedHours}</p>
+      {tasks.map((task) => (
+        <div key={task._id} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
+          <h3>{task.title}</h3>
+          <p>{task.description}</p>
+          <p>Status: {task.status}</p>
+          <p>Priority: {task.priority}</p>
 
-              <button onClick={() => handleDelete(task._id)}>Delete</button>
-            </div>
-          ))}
+          <button onClick={() => handleEdit(task)}>Edit</button>
+          <button onClick={() => handleDelete(task._id)}>Delete</button>
         </div>
-      )}
+      ))}
     </div>
   );
 }
