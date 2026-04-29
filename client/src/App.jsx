@@ -101,7 +101,7 @@ function App() {
 
   return (
     <div style={{ padding: "30px", fontFamily: "Arial" }}>
-      <h1>📚 Study Planner</h1>
+      <h1>📚 Study Planner App</h1>
 
       <form onSubmit={handleSubmit} style={{ marginBottom: "30px" }}>
         <input
