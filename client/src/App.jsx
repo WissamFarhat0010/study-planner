@@ -16,11 +16,18 @@ function App() {
   const fetchTasks = () => {
     fetch("http://localhost:5000/api/tasks")
       .then((res) => res.json())
-      .then((data) => setTasks(data));
+      .then((data) => setTasks(data))
+      .catch((error) => console.error("Error fetching tasks:", error));
   };
 
   useEffect(() => {
     fetchTasks();
+
+    const interval = setInterval(() => {
+      fetchTasks();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleChange = (e) => {
@@ -33,32 +40,42 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (editingId) {
-      await fetch(`http://localhost:5000/api/tasks/${editingId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+    try {
+      let response;
+
+      if (editingId) {
+        response = await fetch(`http://localhost:5000/api/tasks/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+      } else {
+        response = await fetch("http://localhost:5000/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
+      setFormData({
+        title: "",
+        description: "",
+        dueDate: "",
+        status: "Pending",
+        priority: "Medium",
+        estimatedHours: 1,
       });
 
       setEditingId(null);
-    } else {
-      await fetch("http://localhost:5000/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      fetchTasks();
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong. Check console.");
     }
-
-    setFormData({
-      title: "",
-      description: "",
-      dueDate: "",
-      status: "Pending",
-      priority: "Medium",
-      estimatedHours: 1,
-    });
-
-    fetchTasks();
   };
 
   const handleDelete = async (id) => {
@@ -100,8 +117,8 @@ function App() {
   };
 
   return (
-    <div style={{ padding: "30px", fontFamily: "Arial" }}>
-      <h1>📚 Study Planner App</h1>
+    <div style={{ padding: "30px", fontFamily: "Arial", textAlign: "center" }}>
+      <h1>📚 Study Planner</h1>
 
       <form onSubmit={handleSubmit} style={{ marginBottom: "30px" }}>
         <input
@@ -171,7 +188,7 @@ function App() {
               style={{
                 border: "1px solid #ccc",
                 padding: "15px",
-                marginBottom: "10px",
+                marginBottom: "15px",
                 borderRadius: "8px",
               }}
             >
